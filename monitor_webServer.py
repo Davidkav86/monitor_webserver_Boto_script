@@ -8,8 +8,6 @@ import boto.ec2.cloudwatch
 import boto.ec2.autoscale
 import boto.sns
 import datetime
-import httplib
-import urllib2
 from boto.ec2.autoscale import LaunchConfiguration
 from boto.ec2.autoscale import AutoScalingGroup
 from boto.ec2.autoscale import ScalingPolicy
@@ -88,10 +86,12 @@ def create_alarm(instance_id):
 	    alarm = metrics[0].create_alarm(name='Network_Usage_Alarm', comparison='>=', threshold=500000, period=60,
                     evaluation_periods=1, statistic='Average', alarm_actions=[arn,as_policy_arn])
 	    if alarm:
-		    print '\nAlarm set'
+	    	print '\n----------'
+		    print 'Alarm set'
+		    print '----------\n'
 		    alarmed = True
 	    else:
-		    print '\nAlarm has not been set'
+		    print '\nAlarm has not been set\n'
 	else:
 		print 'An alarm has already been set on this instance'
 
@@ -109,11 +109,11 @@ def create_auto_scaling(instance_id):
     
     # create an autoscaling group
 	autoscaling_group = AutoScalingGroup(name = 'DK-AutoScale-Boto',
-		availability_zones = ['eu-west-1a', 'eu-west-1b'],
-		vpc_zone_identifier = ['subnet-747ea503','subnet-bfcb34e6'],
-		security_group_ids = ['sg-0edd5d6b'],
 		launch_config = launch_config,
-		min_size = 1, max_size = 3, 
+		min_size = 1, max_size = 3,
+		availability_zones = ['eu-west-1a', 'eu-west-1b'],
+		# vpc_zone_identifier = ['subnet-747ea503','subnet-bfcb34e6'],
+		# security_group_ids = ['sg-0edd5d6b'], 
 		connection = autoscaling_conn)
     
     # tag the instance
@@ -140,7 +140,7 @@ def create_auto_scaling(instance_id):
 
 
 #
-# Allows the user to monitor a list of metrics. A cloudwatch object is initialised
+# Allows the user to monitor a list of metrics. A cloudwactch object is initialised
 # The cloudwatch object is used to get the statistics for a metric chosen by the user
 # by passing it into the get_metric_statistics method. 
 #
@@ -192,20 +192,18 @@ def trigger_alarm():
 
 	dns = instance.public_dns_name
 	url = '"http://' + dns + '"'
-	# if alarmed == True:
-	i = 0
+	if alarmed == True:
+	    
+	    i = 0
+	    cmd = 'curl ' + url
+	    print '\nRunning script to trigger alarm\n'
+	    while i < 1000:
+	    	commands.getstatusoutput(cmd)
+	    	i = i + 1
 
-	cmd = 'curl ' + url
-
-	print '\nRunning script to trigger alarm\n'
-
-	while i < 1000:
-		commands.getstatusoutput(cmd)
-		i = i + 1
-
-	# else:
-	# 	print '\nNo alarm has been set'
-	# 	print 'Set a CloudWatch alarm first\n'
+	else:
+		print '\nNo alarm has been set'
+		print 'Set a CloudWatch alarm first\n'
 
 
 
@@ -215,7 +213,7 @@ def main():
 	input = raw_input('Input: ')
 
 	if input == '1':
-		input = 'i-ca09012e'
+		input = 'i-dc65923a'
 
 
 	start(input)
